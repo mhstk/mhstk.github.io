@@ -9,4 +9,4 @@ redirect_from:
 
 {% include base_path %}
 -----
-You can download my Resume from here: [MohammadHoseinSetak_Resume_2021] (https://mhstk.github.io/files/MohammadHoseinSetak_Resume_2021.pdf)
+You can download my Resume from here: [MohammadHoseinSetak_Resume_2021](https://mhstk.github.io/files/MohammadHoseinSetak_Resume_2021.pdf)
