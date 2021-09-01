@@ -8,7 +8,7 @@ redirect_from:
   - /about.html
 ---
 
-Hi! I'm Mohammad Hosein, a student in Computer Engineering at Amirkabir University of Technology. I am a hardworking and passionate individual offering more than three years of experience as a programmer. I like to solve problems using creative thinking and innovative solutions. I'm pursuing a new position in Master of Science in Computer Science. I am a flexible and fast-learner person and always trying to learn new things and concepts. I quickly master new software packages and hardware technologies.
+Hi! I'm Mohammad Hosein, a student in Computer Engineering at Amirkabir University of Technology. I am a hardworking and passionate individual offering more than three years of experience as a programmer. I like to solve problems using creative thinking and innovative solutions. I am a flexible and fast-learner person and always trying to learn new things and concepts.
 
 
 
