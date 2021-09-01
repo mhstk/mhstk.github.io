@@ -10,13 +10,16 @@ redirect_from:
 
 Hi! I'm Mohammad Hosein, a student in Computer Engineering at Amirkabir University of Technology. I am a hardworking and passionate individual offering more than three years of experience as a programmer. I like to solve problems using creative thinking and innovative solutions. I'm pursuing a new position in Master of Science in Computer Science. I am a flexible and fast-learner person and always trying to learn new things and concepts. I quickly master new software packages and hardware technologies.
 
+
+
 Education
-======
+------
 * B.Sc. in Computer Engineering, Amirkabir University of Technology, Tehran, Iran, 2017 - current
 * Diploma, Nikan High School 2013-2017
 
+
 Technical Skills
-======
+------
 * Programming Development: Python, Java, Javascript, C, VHDL, Racket
 * Database: Mysql, postgreSQL, Oracle Database, MongoDB
 * Web development: Html, Css, Sass, React
