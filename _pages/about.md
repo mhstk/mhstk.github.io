@@ -28,14 +28,14 @@ Technical Skills
 ------
 * Programming Development: Python, Java, Javascript, C, VHDL, Racket
 * Database: Mysql, postgreSQL, Oracle Database, MongoDB
-* Web development: Html, Css, Sass, React
+* Web development: Html, CSS, Sass, React
 * Data Computation: Hadoop, Apache Spark (Beginner)
 * Other: Docker, Latex, Arduino, Proteus, Rospy
 
 
 Teaching Assistance
 ------
-aaaaaaaaaaaaa
+...
 
 
 Research Interests
