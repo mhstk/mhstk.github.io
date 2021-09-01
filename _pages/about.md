@@ -18,6 +18,12 @@ Education
 * Diploma, Nikan High School 2013-2017
 
 
+Projects
+------
+* 1
+* 2
+* 3
+
 Technical Skills
 ------
 * Programming Development: Python, Java, Javascript, C, VHDL, Racket
