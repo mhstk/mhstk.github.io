@@ -6,8 +6,7 @@ author_profile: true
 ---
 
 {% include base_path %}
-
-I am currently working on two papers in the Viechle Routing Problem area and using Adaptive search approaches to solve them. I'm assisting Sajad Hedayati, a Ph.D. student in Civil Engineering at Khajeh Nasir Toosi University. I'm responsible for coding and implementing algorithms (like SA, Genetics, Hill climbing, etc.) used in the papers.
+I am currently doing research in the Viechle Routing Problem area, which has resulted in two papers until now. I'm assisting Sajad Hedayati, a Ph.D. student in Civil Engineering at Khajeh Nasir Toosi University. We use Adaptive search approaches to solve the problems. I'm responsible for coding and implementing algorithms (like SA, Genetics, Hill climbing, etc.) used in the papers.
 
 Re-supplying mobile parcel lockers in last mile logistics
 ----
