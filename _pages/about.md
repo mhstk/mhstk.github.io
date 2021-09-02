@@ -47,7 +47,7 @@ Research Interests
 ------
 * Artificial Intelligence & Machine Learning
 * Data Science & Engineering
-* Image Processing & Computer Vison
+* Image Processing & Computer Vision
 * Software Engineering
 * Information Retrieval
 * Cryptography
