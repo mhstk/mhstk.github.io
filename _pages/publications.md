@@ -12,7 +12,7 @@ I am currently doing research in the Viechle Routing Problem area, which has res
 Re-supplying mobile parcel lockers in last mile logistics
 ----
 We study the generalized vehicle routing problem with multiple time windows for re-supply mobile parcel lockers at selected locations in a set of fixed routes where mobile parcel lockers are moving on these routes during the day. We first provide a mixed-integer linear programming formulation for the problem and propose an adaptive large neighbourhood search algorithm for solving large-sized instances.
-* in progress (Soon to be published)
+* in progress
 
 Mixed-integer linear programming formulations for the clustered generalized vehicle routing problem
 ----
