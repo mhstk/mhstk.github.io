@@ -20,9 +20,14 @@ Education
 
 Projects
 ------
-* 1
-* 2
-* 3
+* Developed a compiler to compile a new simple programming language to C. [Compiler-project](https://github.com/mhstk/Compiler_Project)
+* During my Artificial Intelligence course, I developed multiple projects which used Graph Searching Algorithms, NLP, CSP in python.
+* During my Computational Intelligence course, I developed multiple neural networks, which learned multiple games like Flappy Bird, and hand-written digits. [airplane-project](./#) [hand-written recognition](./#)
+* As my final project for Information Retrieval Course created a simple search engine for Persian documents and a program to groups docs in a certain number of clusters using KNN. [IR-project](https://github.com/mhstk/Information_Retrieval_project)
+* Developed a complete PI controller in ROS during my Robotics course, which travels inside a maze.
+* Developed a download manager like IDM in Java. [JDM](https://github.com/mhstk/JavaDownloadManager)
+* Developed Normal Tanks in my second semester, which is a 2d Java game as my Advanced Programming course's final project. [JTanks](https://github.com/mhstk/NormalTank)
+
 
 Technical Skills
 ------
