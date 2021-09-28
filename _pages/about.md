@@ -40,7 +40,8 @@ Technical Skills
 
 Teaching Assistance
 ------
-...
+* Principles of Computer & Programming Course
+* Embedded and Real-Time Systems Course
 
 
 Research Interests
