@@ -88,6 +88,7 @@ ol strong{color:var(--ink);font-weight:500}
       <button id="gateBtn" type="button" aria-pressed="true">Gate: on</button>
     </div>
     <p class="msg" id="msg" hidden></p>
+    <audio id="out" playsinline hidden></audio>
   </section>
 
   <section class="panel">
@@ -104,6 +105,8 @@ ol strong{color:var(--ink);font-weight:500}
     <div class="knob"><label for="crunch">Crunch</label><input id="crunch" type="range" min="0" max="1" step="0.01" value="0.1"><output id="crunchOut">10%</output></div>
     <div class="knob"><label for="volume">Volume</label><input id="volume" type="range" min="0" max="2" step="0.01" value="1"><output id="volumeOut">100%</output></div>
     <div class="knob"><label for="gate">Gate</label><input id="gate" type="range" min="0.005" max="0.12" step="0.001" value="0.02"><output id="gateOut">2.0</output></div>
+    <label class="check"><input id="player" type="checkbox" checked>
+      <span>Play through media player<small>On by default because it routes to Bluetooth better on iPhone. If you hear nothing, flip it and tap Start again.</small></span></label>
     <label class="check"><input id="ec" type="checkbox">
       <span>Feedback guard<small>Turn on if the speaker squeals. It can make the sound quieter. Restarts the mic.</small></span></label>
   </section>
@@ -170,8 +173,11 @@ ol strong{color:var(--ink);font-weight:500}
     shaper.connect(comp);
     shaper.connect(delay); delay.connect(fb).connect(delay); delay.connect(wet).connect(comp);
     comp.connect(lp).connect(out).connect(scope);
-    out.connect(ctx.destination);
-    n={src,osc,shaper,delay,fb,gate,out,meter,scope};
+    let dest=null;
+    if($("player").checked && ctx.createMediaStreamDestination){
+      dest=ctx.createMediaStreamDestination(); out.connect(dest);
+    } else out.connect(ctx.destination);
+    n={src,osc,shaper,delay,fb,gate,out,meter,scope,dest};
     apply(true);
   }
   function apply(now){
@@ -225,12 +231,15 @@ ol strong{color:var(--ink);font-weight:500}
       showMsg("The mic only works when this page is opened from an https:// link in Safari or Chrome, not as a downloaded file."); return;
     }
     try{
-      ctx = ctx || new (window.AudioContext||window.webkitAudioContext)({latencyHint:"interactive"});
-      try{ if(navigator.audioSession) navigator.audioSession.type="play-and-record"; }catch(e){}
+      // Mic first, so iPhone settles its audio mode before any sound engine starts.
       stream = await navigator.mediaDevices.getUserMedia({audio:{
         echoCancellation:$("ec").checked, noiseSuppression:false, autoGainControl:false, channelCount:1}});
+      ctx = new (window.AudioContext||window.webkitAudioContext)({latencyHint:"interactive"});
+      ctx.onstatechange = () => { diag(); if(running && ctx && ctx.state!=="running" && ctx.state!=="closed") ctx.resume().catch(()=>{}); };
       if(ctx.state!=="running") await ctx.resume();
       build();
+      const el=$("out");
+      if(n.dest){ el.srcObject=n.dest.stream; el.muted=false; el.volume=1; await el.play(); }
       running=true;
       gateTimer=setInterval(gateTick,15);
       fit(); draw();
@@ -238,7 +247,7 @@ ol strong{color:var(--ink);font-weight:500}
       const ms=Math.round(((ctx.baseLatency||0)+(ctx.outputLatency||0))*1000);
       $("latency").textContent = ms ? "PHONE DELAY ≈ "+ms+" MS" : "PHONE DELAY LOW";
       const track=stream.getAudioTracks()[0];
-      $("route").textContent=(track && track.label ? track.label : "MIC ON").toUpperCase().slice(0,26);
+      diag();
       track && track.addEventListener("ended", () => { stop(); showMsg("The mic was taken by another app or the screen locked. Tap Start again."); });
       ui();
     }catch(err){
@@ -253,9 +262,15 @@ ol strong{color:var(--ink);font-weight:500}
     running=false; clearInterval(gateTimer); cancelAnimationFrame(raf);
     if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
     if(n){ try{n.osc.stop();}catch(e){} try{n.out.disconnect(); n.src.disconnect();}catch(e){} n=null; }
+    try{ const el=$("out"); el.pause(); el.srcObject=null; }catch(e){}
+    if(ctx){ const c=ctx; ctx=null; c.onstatechange=null; try{ c.close(); }catch(e){} }
     try{ wake && wake.release(); }catch(e){} wake=null;
     $("level").style.width="0"; $("route").textContent="MIC OFF"; $("latency").textContent="PHONE DELAY —";
     fit(); grid(); ui();
+  }
+  function diag(){
+    if(!ctx){ $("route").textContent="MIC OFF"; return; }
+    $("route").textContent=($("player").checked?"PLAYER":"DIRECT")+" · "+ctx.state.toUpperCase();
   }
   function ui(){
     $("talk").textContent = running ? "Stop" : "Start robot voice";
@@ -284,6 +299,7 @@ ol strong{color:var(--ink);font-weight:500}
     syncOutputs(); apply();
   });
   $("ec").addEventListener("change", async () => { if(running){ stop(); await start(); } });
+  $("player").addEventListener("change", async () => { if(running){ stop(); await start(); } });
   document.addEventListener("visibilitychange", async () => {
     if(document.visibilityState==="visible" && running){
       if(ctx && ctx.state!=="running") try{ await ctx.resume(); }catch(e){}
