@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#13171c">
+<title>Tin Voice Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow machine panel. Big talk button, live meter, presets, three tuning sliders */
+:root{
+  --bg:#13171c; --panel:#1c2229; --ink:#e4e9ee; --muted:#93a0ad; --line:#2f3842;
+  --accent:#6f95ff; --led:#f0b429; --live:#3ddc84; --danger:#ff6b5e; --scope:#0b1016; --trace:#8fbcff;
+  --display:"Chakra Petch","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;
+  padding-top:max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom:max(28px, env(safe-area-inset-bottom, 0px));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:.02em;margin:0}
+.status{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.led{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.led.on{background:var(--live);box-shadow:0 0 8px var(--live)}
+.led.muted{background:var(--led);box-shadow:0 0 8px var(--led)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.scope{position:relative;background:var(--scope);border-radius:6px;overflow:hidden}
+canvas{display:block;width:100%;height:110px}
+.readout span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.readout{position:absolute;left:10px;right:10px;bottom:6px;display:flex;justify-content:space-between;gap:14px;font-family:var(--mono);font-size:11px;color:#9fb0c2;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.meter{height:8px;border-radius:4px;background:var(--scope);overflow:hidden;position:relative}
+.meter i{position:absolute;inset:0 auto 0 0;width:0;background:var(--live);transition:width .05s linear}
+.meter b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--led)}
+button{font-family:var(--display);font-weight:500;letter-spacing:.04em;border-radius:10px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.talk{font-size:22px;padding:22px 16px;background:var(--accent);border-color:var(--accent);color:#fff;width:100%}
+.talk.live{background:transparent;color:var(--danger);border-color:var(--danger)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row button{font-size:16px;padding:14px 10px}
+#mute[aria-pressed="true"]{background:var(--led);border-color:var(--led);color:#1b1400}
+.label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.presets button{padding:10px 2px;font-size:13px}
+.presets button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--panel)}
+.knob{display:grid;grid-template-columns:78px minmax(0,1fr) 62px;align-items:center;gap:12px}
+.knob label{font-family:var(--display);font-size:15px}
+.knob output{font-family:var(--mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent);min-width:0;height:28px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.check input{accent-color:var(--accent);width:20px;height:20px;margin:1px 0 0;flex:none}
+.check small{display:block;color:var(--muted);font-size:12.5px}
+.msg{margin:0;font-size:14px;padding:10px 12px;border-radius:8px;border:1px solid var(--danger);color:var(--danger)}
+ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:14px}
+ol strong{color:var(--ink);font-weight:500}
+@media (max-width:370px){.presets{grid-template-columns:repeat(2,1fr)}.knob{grid-template-columns:64px minmax(0,1fr) 54px}}
+@media (prefers-reduced-motion:reduce){.meter i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Tin Voice Live</h1>
+    <div class="status"><span class="led" id="led"></span><span id="statusText">Off</span></div>
+  </header>
+
+  <section class="panel">
+    <div class="scope">
+      <canvas id="scope" aria-label="Live robot waveform"></canvas>
+      <div class="readout"><span id="latency">PHONE DELAY —</span><span id="route">MIC OFF</span></div>
+    </div>
+    <div>
+      <div class="label" style="margin-bottom:6px">Mic level · gate line in yellow</div>
+      <div class="meter"><i id="level"></i><b id="gateMark"></b></div>
+    </div>
+    <button class="talk" id="talk" type="button">Start robot voice</button>
+    <div class="row">
+      <button id="mute" type="button" aria-pressed="false" disabled>Mute</button>
+      <button id="gateBtn" type="button" aria-pressed="true">Gate: on</button>
+    </div>
+    <p class="msg" id="msg" hidden></p>
+  </section>
+
+  <section class="panel">
+    <span class="label">Preset</span>
+    <div class="presets" id="presets">
+      <button type="button" data-p="tin" aria-pressed="true">Tin Can</button>
+      <button type="button" data-p="factory" aria-pressed="false">Factory</button>
+      <button type="button" data-p="radio" aria-pressed="false">Broadcast</button>
+      <button type="button" data-p="arcade" aria-pressed="false">Arcade</button>
+    </div>
+    <span class="label">Tune live</span>
+    <div class="knob"><label for="buzz">Buzz</label><input id="buzz" type="range" min="20" max="200" step="1" value="50"><output id="buzzOut">50 Hz</output></div>
+    <div class="knob"><label for="metal">Metal</label><input id="metal" type="range" min="0" max="0.85" step="0.01" value="0.55"><output id="metalOut">65%</output></div>
+    <div class="knob"><label for="crunch">Crunch</label><input id="crunch" type="range" min="0" max="1" step="0.01" value="0.1"><output id="crunchOut">10%</output></div>
+    <div class="knob"><label for="volume">Volume</label><input id="volume" type="range" min="0" max="2" step="0.01" value="1"><output id="volumeOut">100%</output></div>
+    <div class="knob"><label for="gate">Gate</label><input id="gate" type="range" min="0.005" max="0.12" step="0.001" value="0.02"><output id="gateOut">2.0</output></div>
+    <label class="check"><input id="ec" type="checkbox">
+      <span>Feedback guard<small>Turn on if the speaker squeals. It can make the sound quieter. Restarts the mic.</small></span></label>
+  </section>
+
+  <section class="panel">
+    <span class="label">Testing it</span>
+    <ol>
+      <li><strong>Connect your Bluetooth speaker</strong> first, then tap Start and allow the mic.</li>
+      <li><strong>Keep the speaker a few steps away</strong> with the volume low, then turn it up slowly.</li>
+      <li><strong>Raise the Gate</strong> until the room noise stops buzzing but your voice still comes through.</li>
+      <li>Keep this screen open. iPhone stops the mic when Safari goes to the background.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const PRESETS = {
+    tin:{buzz:50,metal:.55,crunch:.1}, factory:{buzz:30,metal:.78,crunch:.35},
+    radio:{buzz:90,metal:.3,crunch:.5}, arcade:{buzz:150,metal:.2,crunch:.75}
+  };
+  let ctx=null, stream=null, n=null, running=false, muted=false, gateOn=true, gateTimer=0, raf=0, wake=null, holdUntil=0;
+
+  // ----- helpers -----
+  const params = () => ({buzz:+$("buzz").value, metal:+$("metal").value, crunch:+$("crunch").value,
+    volume:+$("volume").value, gate:+$("gate").value});
+  function crunchCurve(c){
+    const len=4096, curve=new Float32Array(len);
+    const levels=Math.max(3, Math.round(Math.pow(2, 8-6*c)));
+    const drive=1+c*2;
+    for(let i=0;i<len;i++){ const x=(i/(len-1)*2-1)*drive; const q=Math.round(Math.max(-1,Math.min(1,x))*levels)/levels; curve[i]=q; }
+    return curve;
+  }
+  function showMsg(t){ $("msg").textContent=t; $("msg").hidden=!t; }
+  function syncOutputs(){
+    const p=params();
+    $("buzzOut").textContent=p.buzz+" Hz";
+    $("metalOut").textContent=Math.round(p.metal/.85*100)+"%";
+    $("crunchOut").textContent=Math.round(p.crunch*100)+"%";
+    $("volumeOut").textContent=Math.round(p.volume*100)+"%";
+    $("gateOut").textContent=(p.gate*100).toFixed(1);
+    $("gateMark").style.left=Math.min(100, p.gate/0.25*100)+"%";
+  }
+
+  // ----- audio graph -----
+  function build(){
+    const src=ctx.createMediaStreamSource(stream);
+    const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=110;
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=6500;
+    const pre=ctx.createGain(); pre.gain.value=2.2;
+    const gate=ctx.createGain(); gate.gain.value=gateOn?0:1;
+    const ring=ctx.createGain(); ring.gain.value=0;
+    const osc=ctx.createOscillator(); osc.type="sine"; osc.connect(ring.gain); osc.start();
+    const shaper=ctx.createWaveShaper(); shaper.oversample="none";
+    const delay=ctx.createDelay(0.1); const fb=ctx.createGain(); const wet=ctx.createGain(); wet.gain.value=.7;
+    const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-20; comp.ratio.value=8; comp.attack.value=.003; comp.release.value=.12;
+    const out=ctx.createGain();
+    const meter=ctx.createAnalyser(); meter.fftSize=512;
+    const scope=ctx.createAnalyser(); scope.fftSize=1024;
+
+    src.connect(hp); hp.connect(meter);
+    hp.connect(pre).connect(gate).connect(ring).connect(shaper);
+    shaper.connect(comp);
+    shaper.connect(delay); delay.connect(fb).connect(delay); delay.connect(wet).connect(comp);
+    comp.connect(lp).connect(out).connect(scope);
+    out.connect(ctx.destination);
+    n={src,osc,shaper,delay,fb,gate,out,meter,scope};
+    apply(true);
+  }
+  function apply(now){
+    if(!n) return;
+    const p=params(), t=ctx.currentTime, k=now?0.001:0.03;
+    n.osc.frequency.setTargetAtTime(p.buzz,t,k);
+    n.fb.gain.setTargetAtTime(p.metal,t,k);
+    n.delay.delayTime.setTargetAtTime(0.003+(1/p.buzz)*0.22,t,k);
+    n.shaper.curve=crunchCurve(p.crunch);
+    n.out.gain.setTargetAtTime(muted?0:p.volume,t,0.01);
+  }
+
+  // ----- gate + meter (runs on a timer so it keeps working without animation frames) -----
+  const buf=new Float32Array(512);
+  function gateTick(){
+    if(!n) return;
+    n.meter.getFloatTimeDomainData(buf);
+    let s=0; for(let i=0;i<buf.length;i++) s+=buf[i]*buf[i];
+    const rms=Math.sqrt(s/buf.length), p=params(), t=ctx.currentTime, now=performance.now();
+    $("level").style.width=Math.min(100, rms/0.25*100)+"%";
+    if(!gateOn){ n.gate.gain.setTargetAtTime(1,t,0.005); return; }
+    if(rms>p.gate){ holdUntil=now+220; n.gate.gain.setTargetAtTime(1,t,0.004); }
+    else if(now>holdUntil){ n.gate.gain.setTargetAtTime(0,t,0.04); }
+  }
+
+  // ----- scope -----
+  const cv=$("scope"), g=cv.getContext("2d"), sbuf=new Float32Array(1024);
+  function fit(){ const r=cv.getBoundingClientRect(), d=devicePixelRatio||1; cv.width=Math.round(r.width*d); cv.height=Math.round(r.height*d); }
+  function grid(){
+    const w=cv.width,h=cv.height; g.clearRect(0,0,w,h);
+    g.strokeStyle="rgba(140,170,210,.12)"; g.lineWidth=1;
+    for(let x=0;x<=w;x+=w/12){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+    for(let y=0;y<=h;y+=h/4){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+  }
+  function draw(){
+    grid();
+    if(n){
+      n.scope.getFloatTimeDomainData(sbuf);
+      const w=cv.width,h=cv.height;
+      g.strokeStyle="#8fbcff"; g.lineWidth=2*(devicePixelRatio||1); g.beginPath();
+      for(let i=0;i<sbuf.length;i++){const x=i/sbuf.length*w, y=h/2-sbuf[i]*h*.45; i?g.lineTo(x,y):g.moveTo(x,y);}
+      g.stroke();
+    }
+    if(running) raf=requestAnimationFrame(draw);
+  }
+
+  // ----- start / stop -----
+  async function start(){
+    showMsg("");
+    if(!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      showMsg("The mic only works when this page is opened from an https:// link in Safari or Chrome, not as a downloaded file."); return;
+    }
+    try{
+      ctx = ctx || new (window.AudioContext||window.webkitAudioContext)({latencyHint:"interactive"});
+      try{ if(navigator.audioSession) navigator.audioSession.type="play-and-record"; }catch(e){}
+      stream = await navigator.mediaDevices.getUserMedia({audio:{
+        echoCancellation:$("ec").checked, noiseSuppression:false, autoGainControl:false, channelCount:1}});
+      if(ctx.state!=="running") await ctx.resume();
+      build();
+      running=true;
+      gateTimer=setInterval(gateTick,15);
+      fit(); draw();
+      try{ wake = await navigator.wakeLock?.request("screen"); }catch(e){}
+      const ms=Math.round(((ctx.baseLatency||0)+(ctx.outputLatency||0))*1000);
+      $("latency").textContent = ms ? "PHONE DELAY ≈ "+ms+" MS" : "PHONE DELAY LOW";
+      const track=stream.getAudioTracks()[0];
+      $("route").textContent=(track && track.label ? track.label : "MIC ON").toUpperCase().slice(0,26);
+      track && track.addEventListener("ended", () => { stop(); showMsg("The mic was taken by another app or the screen locked. Tap Start again."); });
+      ui();
+    }catch(err){
+      stop();
+      if(err && (err.name==="NotAllowedError"||err.name==="SecurityError"))
+        showMsg("Mic access was blocked. On iPhone: Settings › Apps › Safari › Microphone › Allow, then reload this page.");
+      else if(err && err.name==="NotFoundError") showMsg("No microphone was found. Plug in your mic or check it's connected.");
+      else showMsg("The robot voice couldn't start: "+(err && err.message ? err.message : "unknown error")+". Reload the page and try again.");
+    }
+  }
+  function stop(){
+    running=false; clearInterval(gateTimer); cancelAnimationFrame(raf);
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+    if(n){ try{n.osc.stop();}catch(e){} try{n.out.disconnect(); n.src.disconnect();}catch(e){} n=null; }
+    try{ wake && wake.release(); }catch(e){} wake=null;
+    $("level").style.width="0"; $("route").textContent="MIC OFF"; $("latency").textContent="PHONE DELAY —";
+    fit(); grid(); ui();
+  }
+  function ui(){
+    $("talk").textContent = running ? "Stop" : "Start robot voice";
+    $("talk").classList.toggle("live", running);
+    $("mute").disabled = !running;
+    $("mute").setAttribute("aria-pressed", String(muted));
+    $("mute").textContent = muted ? "Muted" : "Mute";
+    const led=$("led"); led.className="led"+(running?(muted?" muted":" on"):"");
+    $("statusText").textContent = running ? (muted?"Muted":"Live") : "Off";
+  }
+
+  // ----- controls -----
+  $("talk").addEventListener("click", () => running ? stop() : start());
+  $("mute").addEventListener("click", () => { muted=!muted; apply(); ui(); });
+  $("gateBtn").addEventListener("click", () => {
+    gateOn=!gateOn; $("gateBtn").setAttribute("aria-pressed",String(gateOn)); $("gateBtn").textContent="Gate: "+(gateOn?"on":"off");
+  });
+  ["buzz","metal","crunch"].forEach(id => $(id).addEventListener("input", () => {
+    syncOutputs(); document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed","false")); apply();
+  }));
+  ["volume","gate"].forEach(id => $(id).addEventListener("input", () => { syncOutputs(); apply(); }));
+  $("presets").addEventListener("click", e => {
+    const b=e.target.closest("button"); if(!b) return; const p=PRESETS[b.dataset.p];
+    $("buzz").value=p.buzz; $("metal").value=p.metal; $("crunch").value=p.crunch;
+    document.querySelectorAll("#presets button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    syncOutputs(); apply();
+  });
+  $("ec").addEventListener("change", async () => { if(running){ stop(); await start(); } });
+  document.addEventListener("visibilitychange", async () => {
+    if(document.visibilityState==="visible" && running){
+      if(ctx && ctx.state!=="running") try{ await ctx.resume(); }catch(e){}
+      try{ wake = await navigator.wakeLock?.request("screen"); }catch(e){}
+    }
+  });
+  addEventListener("resize", () => { fit(); if(!running) grid(); });
+
+  try{ const s=JSON.parse(localStorage.getItem("tinvoice")||"null");
+    if(s){ ["buzz","metal","crunch","volume","gate"].forEach(k=>{ if(s[k]!=null) $(k).value=s[k]; }); } }catch(e){}
+  addEventListener("pagehide", () => { try{ localStorage.setItem("tinvoice", JSON.stringify(params())); }catch(e){} });
+
+  syncOutputs(); fit(); grid(); ui();
+})();
+</script>
+</body>
+</html>
